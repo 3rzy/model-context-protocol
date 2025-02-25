@@ -25,7 +25,9 @@
   },
   "homepage": "https://github.com/3rzy/model-context-protocol#readme",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.16.0",
     "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "joi": "^17.11.0",
     "natural": "^6.8.0"
