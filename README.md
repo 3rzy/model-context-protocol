@@ -16,6 +16,7 @@ Projekt ten zawiera referencyjną implementację protokołu MCP w JavaScript, kt
 - System planowania i sekwencjonowania zadań
 - Mechanizm walidacji parametrów i wyników
 - Zarządzanie kontekstem wykonania
+- Integracja z Claude AI od Anthropic
 
 ## 📦 Struktura repozytorium
 
@@ -26,7 +27,7 @@ model-context-protocol/
 │   │   ├── mcp-schema.js        # Definicja schematu protokołu MCP
 │   │   ├── mcp-client.js        # Implementacja klienta MCP
 │   │   ├── mcp-server.js        # Implementacja serwera MCP
-│   │   └── mcp-agent.js         # Implementacja agenta MCP
+│   │   └── mcp-agent.js         # Implementacja agenta MCP z integracją Claude
 │   │
 │   ├── tools/
 │   │   ├── text-tools.js        # Narzędzia do analizy tekstu
@@ -38,13 +39,15 @@ model-context-protocol/
 │
 ├── examples/
 │   ├── basic-usage.js           # Podstawowy przykład użycia MCP
-│   └── advanced-agent.js        # Zaawansowany agent z MCP
+│   ├── advanced-agent.js        # Zaawansowany agent z MCP
+│   └── claude-agent.js          # Agent MCP zintegrowany z Claude AI
 │
 ├── docs/
 │   ├── protocol-spec.md         # Specyfikacja protokołu
 │   ├── architecture.md          # Architektura systemu
 │   └── tool-development.md      # Przewodnik tworzenia narzędzi
 │
+├── .env.example                 # Przykładowy plik konfiguracyjny
 ├── index.js                     # Punkt wejściowy biblioteki
 ├── package.json                 # Plik konfiguracyjny npm
 └── README.md                    # Ten plik
@@ -61,6 +64,10 @@ cd model-context-protocol
 
 # Zainstaluj zależności
 npm install
+
+# Utwórz plik .env na podstawie .env.example
+cp .env.example .env
+# Edytuj plik .env i dodaj swój klucz API Anthropic dla Claude
 ```
 
 ### Podstawowe użycie
@@ -90,11 +97,16 @@ const result = await client.callTool("analyzeText", { text: "Przykładowy tekst"
 console.log(result);
 ```
 
-### Tworzenie agenta AI z MCP
+### Tworzenie agenta AI z MCP i Claude
 
 ```javascript
-// Utwórz agenta MCP
-const agent = new MCPAgent("GPT-4", mcpClient);
+// Utwórz klienta MCP
+const client = new MCPClient("http://localhost:3000");
+
+// Utwórz agenta MCP zintegrowanego z Claude
+const agent = new MCPAgent("claude-3-opus-20240229", client, {
+  apiKey: process.env.ANTHROPIC_API_KEY
+});
 
 // Przetwórz zapytanie użytkownika
 const response = await agent.processUserQuery(
@@ -102,6 +114,19 @@ const response = await agent.processUserQuery(
 );
 
 console.log(response);
+```
+
+### Uruchomienie przykładów
+
+```bash
+# Podstawowy przykład
+node examples/basic-usage.js
+
+# Zaawansowany agent bez Claude
+node examples/advanced-agent.js
+
+# Agent zintegrowany z Claude AI (wymaga klucza API)
+node examples/claude-agent.js
 ```
 
 ## 🔧 Format protokołu MCP
@@ -156,17 +181,44 @@ Repozytorium zawiera implementacje następujących narzędzi:
    - Parametry: `{ "text": "Tekst do analizy" }`
    - Zwraca: Listy znalezionych technologii, koncepcji i procesów
 
-3. **generatePlan** - Generuje plan wykonania zadania
-   - Parametry: `{ "task": "Zadanie do wykonania", "requirements": ["Wymaganie 1", "Wymaganie 2"] }`
-   - Zwraca: Plan kroków do wykonania
+3. **summarizeText** - Generuje podsumowanie tekstu
+   - Parametry: `{ "text": "Tekst do podsumowania", "maxLength": 200 }`
+   - Zwraca: Podsumowanie tekstu i stopień kompresji
 
 4. **searchRepositories** - Wyszukuje repozytoria GitHub
    - Parametry: `{ "query": "Zapytanie wyszukiwania", "perPage": 5 }`
    - Zwraca: Listę znalezionych repozytoriów
 
-5. **executeCode** - Wykonuje kod i zwraca wynik
+5. **searchWeb** - Wyszukuje informacje w sieci
+   - Parametry: `{ "query": "Zapytanie wyszukiwania" }`
+   - Zwraca: Wyniki wyszukiwania
+
+6. **generatePlan** - Generuje plan wykonania zadania
+   - Parametry: `{ "task": "Zadanie do wykonania", "requirements": ["Wymaganie 1", "Wymaganie 2"] }`
+   - Zwraca: Plan kroków do wykonania
+
+7. **executeCode** - Wykonuje kod i zwraca wynik
    - Parametry: `{ "language": "javascript", "code": "console.log('Hello world');" }`
    - Zwraca: Wynik wykonania kodu
+
+8. **analyzeCode** - Analizuje kod źródłowy
+   - Parametry: `{ "code": "...", "language": "javascript" }`
+   - Zwraca: Metryki i analizę kodu
+
+## 🤖 Integracja z Claude
+
+MCP zawiera integrację z modelem AI Claude od Anthropic, co pozwala na:
+
+- Analizę zapytań użytkownika w języku naturalnym
+- Generowanie planów wykonania zadań
+- Automatyczny wybór odpowiednich narzędzi
+- Generowanie wysokiej jakości odpowiedzi na podstawie wyników narzędzi
+
+Aby użyć integracji z Claude:
+
+1. Uzyskaj klucz API z [Anthropic Console](https://console.anthropic.com/)
+2. Dodaj klucz do pliku `.env`: `ANTHROPIC_API_KEY=your_key_here`
+3. Użyj przykładu `examples/claude-agent.js`
 
 ## 🌐 Zastosowania
 
